@@ -1,0 +1,82 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email == "ramachandrankannan03@gmail.com" && request.auth.token.email_verified == true) ||
+        getUserData().role == 'superadmin'
+      );
+    }
+
+    function hasShopAccess(shopId) {
+      return isSuperAdmin() || (isAuthenticated() && getUserData().shopId == shopId && getUserData().role in ['admin', 'staff']);
+    }
+
+    function isShopAdmin(shopId) {
+      return isSuperAdmin() || (isAuthenticated() && getUserData().shopId == shopId && getUserData().role == 'admin');
+    }
+
+    match /shops/{shopId} {
+      allow read: if isAuthenticated() && hasShopAccess(shopId);
+      allow create: if isSuperAdmin();
+      allow update: if isShopAdmin(shopId);
+      allow delete: if isSuperAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isSuperAdmin() || isOwner(userId) || (isAuthenticated() && getUserData().shopId == resource.data.shopId) || (isAuthenticated() && getUserData().role == 'admin' && resource.data.role == 'pending');
+      allow create: if isAuthenticated() && (isOwner(userId) || isShopAdmin(request.resource.data.shopId));
+      allow update: if isSuperAdmin() || isOwner(userId) || (isAuthenticated() && getUserData().role == 'admin' && (getUserData().shopId == resource.data.shopId || resource.data.role == 'pending'));
+      allow delete: if isSuperAdmin() || isShopAdmin(resource.data.shopId);
+    }
+
+    match /products/{productId} {
+      allow read: if isAuthenticated() && hasShopAccess(resource.data.shopId);
+      allow create: if isAuthenticated() && hasShopAccess(request.resource.data.shopId);
+      allow update: if isAuthenticated() && hasShopAccess(resource.data.shopId) && hasShopAccess(request.resource.data.shopId);
+      allow delete: if isAuthenticated() && hasShopAccess(resource.data.shopId);
+    }
+
+    match /customers/{customerId} {
+      allow read: if isAuthenticated() && hasShopAccess(resource.data.shopId);
+      allow create: if isAuthenticated() && hasShopAccess(request.resource.data.shopId);
+      allow update: if isAuthenticated() && hasShopAccess(resource.data.shopId) && hasShopAccess(request.resource.data.shopId);
+      allow delete: if isAuthenticated() && hasShopAccess(resource.data.shopId);
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if isAuthenticated() && hasShopAccess(resource.data.shopId);
+      allow create: if isAuthenticated() && hasShopAccess(request.resource.data.shopId);
+      allow update: if isAuthenticated() && hasShopAccess(resource.data.shopId) && hasShopAccess(request.resource.data.shopId);
+      allow delete: if isAuthenticated() && hasShopAccess(resource.data.shopId);
+    }
+
+    match /purchases/{purchaseId} {
+      allow read: if isAuthenticated() && hasShopAccess(resource.data.shopId);
+      allow create: if isAuthenticated() && isShopAdmin(request.resource.data.shopId);
+      allow update: if isAuthenticated() && isShopAdmin(resource.data.shopId) && isShopAdmin(request.resource.data.shopId);
+      allow delete: if isAuthenticated() && isShopAdmin(resource.data.shopId);
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && hasShopAccess(resource.data.shopId);
+      allow create: if isAuthenticated() && hasShopAccess(request.resource.data.shopId);
+      allow update: if isAuthenticated() && hasShopAccess(resource.data.shopId) && hasShopAccess(request.resource.data.shopId);
+      allow delete: if isAuthenticated() && hasShopAccess(resource.data.shopId);
+    }
+  }
+}

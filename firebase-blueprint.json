@@ -1,0 +1,121 @@
+{
+  "entities": {
+    "Shop": {
+      "title": "Shop",
+      "description": "A physical store or branch",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "gstin": { "type": "string" },
+        "receiptHeader": { "type": "string" },
+        "receiptFooter": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user of the POS system",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["superadmin", "admin", "staff", "pending"] },
+        "shopId": { "type": "string", "description": "ID of the shop they belong to" },
+        "employeeId": { "type": "string", "description": "ID Number for staff login" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "name", "role", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "type": "object",
+      "properties": {
+        "shopId": { "type": "string" },
+        "name": { "type": "string" },
+        "sku": { "type": "string" },
+        "category": { "type": "string" },
+        "brand": { "type": "string" },
+        "taxRate": { "type": "number" },
+        "variants": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["shopId", "name", "sku", "category", "brand", "taxRate", "variants", "createdAt", "updatedAt"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "type": "object",
+      "properties": {
+        "shopId": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "outstandingBalance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["shopId", "name", "phone", "outstandingBalance", "createdAt"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "type": "object",
+      "properties": {
+        "shopId": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "taxTotal": { "type": "number" },
+        "grandTotal": { "type": "number" },
+        "status": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["shopId", "invoiceNumber", "items", "subtotal", "taxTotal", "grandTotal", "status", "paymentMethod", "createdAt", "createdBy"]
+    },
+    "Purchase": {
+      "title": "Purchase",
+      "type": "object",
+      "properties": {
+        "shopId": { "type": "string" },
+        "supplierName": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "items": { "type": "array" },
+        "totalCost": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["shopId", "supplierName", "items", "totalCost", "createdAt", "createdBy"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "type": "object",
+      "properties": {
+        "shopId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "amount": { "type": "number" },
+        "method": { "type": "string" },
+        "reference": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["shopId", "customerId", "amount", "method", "createdAt", "createdBy"]
+    }
+  },
+  "firestore": {
+    "/shops/{shopId}": { "schema": "Shop", "description": "Stores/Branches" },
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/products/{productId}": { "schema": "Product", "description": "Product catalog per shop" },
+    "/customers/{customerId}": { "schema": "Customer", "description": "Customer database per shop" },
+    "/invoices/{invoiceId}": { "schema": "Invoice", "description": "Sales invoices per shop" },
+    "/purchases/{purchaseId}": { "schema": "Purchase", "description": "Stock purchases per shop" },
+    "/payments/{paymentId}": { "schema": "Payment", "description": "Customer payments per shop" }
+  }
+}
